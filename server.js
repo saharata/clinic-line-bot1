@@ -82,18 +82,18 @@ app.post('/webhook', async (req, res) => {
   continue;
 }
 
-      if (userText === 'สุขภาพ') {
-        await replyMessage(replyToken, [
-          {
-            type: 'text',
-            text:
-              'กรุณากรอกบันทึกสุขภาพได้ที่ลิงก์นี้ครับ:\n' +
-              HEALTH_FORM_URL +
-              '\n\nใช้เวลาไม่นาน และช่วยให้คลินิกติดตามอาการได้ดีขึ้นครับ'
-          }
-        ]);
-        continue;
-      }
+    if (userText === 'สุขภาพ') {
+  await replyMessage(replyToken, [
+    {
+      type: 'text',
+      text:
+        'กรุณากรอกบันทึกสุขภาพได้ที่ลิงก์นี้ครับ:\n' +
+        'https://clinic-liff-frontend.onrender.com' +
+        '\n\nใช้เวลาไม่นาน และช่วยให้คลินิกติดตามอาการได้ดีขึ้นครับ'
+    }
+  ]);
+  continue;
+}
 
       if (userText === 'ติดต่อ') {
         await replyMessage(replyToken, [
