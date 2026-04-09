@@ -1,79 +1,48 @@
-const express = require("express");
+require('dotenv').config()
+const express = require('express')
+const axios = require('axios')
+const app = express()
 
-const app = express();
-const port = process.env.PORT || 3000;
+app.use(express.json())
 
-app.use(express.json());
+app.post('/webhook', async (req, res) => {
+  console.log('Webhook received')
 
-app.get("/", (req, res) => {
-  res.status(200).send("Clinic LINE bot is running");
-});
+  const events = req.body.events
 
-async function replyToLine(replyToken, text) {
-  const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  for (let event of events) {
+    if (event.type === 'message' && event.message.type === 'text') {
+      const userMessage = event.message.text
 
-  if (!channelAccessToken) {
-    throw new Error("Missing LINE_CHANNEL_ACCESS_TOKEN");
-  }
-
-  const response = await fetch("https://api.line.me/v2/bot/message/reply", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${channelAccessToken}`
-    },
-    body: JSON.stringify({
-      replyToken,
-      messages: [
+      await axios.post(
+        'https://api.line.me/v2/bot/message/reply',
         {
-          type: "text",
-          text
+          replyToken: event.replyToken,
+          messages: [
+            {
+              type: 'text',
+              text: 'คุณพิมพ์ว่า: ' + userMessage
+            }
+          ]
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.CHANNEL_ACCESS_TOKEN}`
+          }
         }
-      ]
-    })
-  });
-
-  const data = await response.text();
-
-  if (!response.ok) {
-    throw new Error(`LINE reply failed: ${response.status} ${data}`);
-  }
-
-  return data;
-}
-
-app.post("/line/webhook", async (req, res) => {
-  try {
-    console.log("LINE webhook event:", JSON.stringify(req.body, null, 2));
-
-    const events = req.body.events || [];
-
-    for (const event of events) {
-      if (event.type === "message" && event.message?.type === "text") {
-        const userText = event.message.text || "";
-        const replyToken = event.replyToken;
-
-        let replyMessage = "สวัสดีครับ คลินิกได้รับข้อความของคุณแล้ว";
-
-        if (userText.includes("สวัสดี")) {
-          replyMessage = "สวัสดีครับ คลินิกได้รับข้อความแล้ว เดี๋ยวจะตอบกลับโดยเร็วที่สุดครับ";
-        } else if (userText.includes("เวลาเปิด")) {
-          replyMessage = "กรุณาส่งวันและช่วงเวลาที่ต้องการนัดหมายได้เลยครับ";
-        } else {
-          replyMessage = `คลินิกได้รับข้อความแล้ว: ${userText}`;
-        }
-
-        await replyToLine(replyToken, replyMessage);
-      }
+      )
     }
-
-    res.status(200).json({ ok: true });
-  } catch (error) {
-    console.error("Webhook error:", error.message);
-    res.status(500).json({ ok: false, error: error.message });
   }
-});
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+  res.sendStatus(200)
+})
+
+app.get('/', (req, res) => {
+  res.send('LINE BOT RUNNING')
+})
+
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => {
+  console.log('Server running on port ' + PORT)
+})
